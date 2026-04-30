@@ -1,0 +1,47 @@
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
+
+
+# BE (Python/FastAPI)
+BE/.env
+BE/.venv
+BE/__pycache__/
+BE/*.pyc
+
+
+# FE (Vue/Node)
+frontend/.DS_Store
+frontend/node_modules
+frontend/dist
+
+# local env files
+frontend/.env.local
+frontend/.env.*.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Log files
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Editor directories and files
+frontend/.idea
+frontend/.vscode
+frontend/*.suo
+frontend/*.ntvs*
+frontend/*.njsproj
+frontend/*.sln
+frontend/*.sw?
+
+# 빌드 시 생성되는 로그나 캐시
+frontend/.eslintcache
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+
