@@ -63,7 +63,7 @@ async def getRealtimeArrival(statnNm) :
             print(items.get("errorMessage", {}).get("code"))
             return {"errorMessage" : items.get("errorMessage", {}).get("code")};
 
-        # 역 떠난지 1분 미만인지 판별 위해 필요
+        # 역에서 출발 1분 미만- 화면에 그리기 위해
         serverTime = datetime.now()
 
         resList = []
@@ -92,7 +92,7 @@ async def getRealtimeArrival(statnNm) :
                 except:
                     pass
 
-            # 3. 프론트엔드 맞춤형 딕셔너리 생성
+            # 3. append res data
             data = {
                 "subwayId": d.get("subwayId"),
                 "updnLine": d.get("updnLine"),         # 상행/하행
@@ -109,7 +109,7 @@ async def getRealtimeArrival(statnNm) :
 
         print(key=lambda x: x['ordkey'])
 
-        # 도착 순서대로 정렬해서 반환
+        # 도착 순서대로 정렬
         return sorted(resList, key=lambda x: x['ordkey'])
 
     except Exception:
