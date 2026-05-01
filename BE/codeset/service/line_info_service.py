@@ -1,4 +1,15 @@
-# 각 노선 별 존재하는 역 정보 api 호출
+# 선택 노선 존재하는 역 정보 api 호출
+"""
+[지하철 역 정보 API 파라미터 명세]
+
+- STATION_CD      : 전철역코드
+- STATION_NM      : 전철역명
+- STATION_NM_ENG  : 전철역명(영문)
+- LINE_NUM        : 호선
+- FR_CODE         : 외부코드
+- STATION_NM_CHN  : 전철역명(중문)
+- STATION_NM_JPN  : 전철역명(일문)
+"""
 
 import requests
 import os
