@@ -1,6 +1,6 @@
 ## 혼잡도 통계 api 호출 로직
 """
-[서울시 지하철 혼잡도 통계 정보 API 컬럼 명세]
+[서울시 지하철 혼잡도 통계 정보 API 파라미터 명세]
 
 1. 기본 정보
 - DOW_SE        : 요일 구분 (평일, 토요일, 일요일)
@@ -29,8 +29,10 @@ import datetime
 import pandas as pd
 
 from dotenv import load_dotenv
+from .database import getCongestionData
 
 load_dotenv(dotenv_path="../../dataset/config/.env")
+
 
 def getCongestionStatus(value):
     """
@@ -48,61 +50,22 @@ def getCongestionStatus(value):
     else:
         return {"status": "매우 혼잡", "level": "very_heavy", "color": "#E74C3C"}
     
-async def transformCongestionData(apiItem):
+
+
+
+def getStationCongestion(subway_nm, statn_nm, day_type):
     """
     API의 시간대별 컬럼들을 리스트 형태의 응답 데이터로 변환
     """
-    processedList = []
-    
-    # 시간대 컬럼 리스트 (05:30 ~ 00:30)
-    # 실제 API 컬럼명 규칙에 맞게 리스트를 생성합니다.
-    timeSlots = [
-        "0530", "0600", "0630", "0700", "0730", "0800", "0830", "0900", "0930",
-        "1000", "1030", "1100", "1130", "1200", "1230", "1300", "1330", "1400",
-        "1430", "1500", "1530", "1600", "1630", "1700", "1730", "1800", "1830",
-        "1900", "1930", "2000", "2030", "2100", "2130", "2200", "2230", "2300",
-        "2330", "0000", "0030"
-    ]
+    resList = []
 
-    for slot in timeSlots:
-        columnName = f"TIME{slot}"
-        rawValue = apiItem.get(columnName, 0)
-        
-        # 가공된 상태 정보 가져오기
-        statusInfo = await getCongestionStatus(rawValue)
-        
-        processedList.append({
-            "time": f"{slot[:2]}:{slot[2:]}", # "0830" -> "08:30"
-            "rawVal": rawValue,
-            **statusInfo # status, level, color 포함
-        })
+    # 상행/하행 내행/외행의 2개 데이터 출력
+    resList = getCongestionData(subway_nm, statn_nm, day_type)
 
-    return processedList
+    print(resList)
 
 
-async def getStationCongestion(subway_nm, statn_nm):
-    try:
-        service_key = os.getenv("DATA_API_KEY")
+    #  "time": f"{data[:2]}:{data[2:]}", # "0830" -> "08:30"
 
-        params ={
-            "KEY" : service_key, # 인증키
-            "TYPE" : "json", # 파일 타입
-            "SERVICE":"subwConfusion", 
-            "START_INDEX" : 0, # 시작행
-            "END_INDEX" : 100, # 종료행
-        }
-
-        url = f"http://openapi.seoul.go.kr:8088/{params['KEY']}/{params['TYPE']}/{params['SERVICE']}/{params['START_INDEX']}/{params['END_INDEX']}"
-
-        response = requests.get(url, params=params)
-        items = response.json()
-
-
-        if items.get("errorMessage", {}).get("code") != "INFO-000":
-            print(items["errorMessage"]["code"])
-            return {}
-        
-        
-
-    except Exception:
-        print("Error!");
+    return 
+ resList
