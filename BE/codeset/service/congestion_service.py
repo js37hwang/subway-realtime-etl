@@ -23,9 +23,6 @@
 - 매우 혼잡      : 150% 이상   (열차 탑승 곤란)
 """
 
-import requests
-import os
-import datetime
 import pandas as pd
 
 from dotenv import load_dotenv
@@ -68,4 +65,3 @@ def getStationCongestion(subway_nm, statn_nm, day_type):
     #  "time": f"{data[:2]}:{data[2:]}", # "0830" -> "08:30"
 
     return 
- resList
