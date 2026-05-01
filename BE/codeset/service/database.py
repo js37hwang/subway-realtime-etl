@@ -97,6 +97,25 @@ def initCongestionTableFromCsv(csvPath):
     finally:
         connection.close()
 
+def getCongestionData(subway_nm, statn_nm, day_type):
+    connection = getDbConnection()
+
+    try:
+        with connection.cursor() as cursor:
+                    sql = "SELECT * FROM subway_congestion WHERE station_nm = %s AND line_nm = %s AND day_type = %s"
+                    cursor.execute(sql, (statn_nm, subway_nm, day_type ))
+                    result = cursor.fetchall() # 해당하는 모든 데이터 내놔
+
+                    print(f'result : {result}')
+                    return result
+    
+
+    except Exception as e:
+        print(f"❌ DB 조회 오류: {e}")
+    finally:
+        connection.close()
+
+
 def initSubwayMaster():
     """ 지하철 노선 마스터 데이터 초기화 저장 """
     # 공식 노선도 색상 기준 데이터
