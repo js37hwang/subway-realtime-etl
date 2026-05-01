@@ -1,22 +1,44 @@
+# 가상환경
+.venv
+
 # OS/IDE
 .DS_Store
 .vscode/
 .idea/
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
+logs/
 
 
 # BE (Python/FastAPI)
-BE/.env
-BE/.venv
+EB/dataset/config/.env
 BE/__pycache__/
+BE/codeset/service/__pycache__/
 BE/*.pyc
+BE/*.py[cod]
+BE/*$py.class
+BE/build/
+BE/dist/
+BE/*.egg-info/
 
 
 # FE (Vue/Node)
 frontend/.DS_Store
 frontend/node_modules
 frontend/dist
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnp/
+frontend/.pnp.js
+frontend/dist/
+frontend/build/
 
 # local env files
+frontend/.env
 frontend/.env.local
 frontend/.env.*.local
 frontend/.env.development.local
