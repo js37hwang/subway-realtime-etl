@@ -17,7 +17,7 @@
         </thead>
         <tbody class="scrollable-body">
           <tr v-for="row in mergedTimeline" :key="row.time">
-            <!-- 좌측: 상행/내선 혼잡도 -->
+            <!-- [좌측] 상행/내선 혼잡도 -->
             <td class="col-side">
               <div
                 v-if="row.up"
@@ -28,10 +28,10 @@
               </div>
             </td>
 
-            <!-- 중앙: 시간 -->
+            <!-- [중앙] 시간 -->
             <td class="col-time time-text">{{ row.time }}</td>
 
-            <!-- 우측: 하행/외선 혼잡도 -->
+            <!-- [우측] 하행/외선 혼잡도 -->
             <td class="col-side">
               <div
                 v-if="row.down"
@@ -50,15 +50,13 @@
 
 <script>
 export default {
-  props: ["timelineData", "lineColor"], // 부모(App.vue)로부터 congestions 배열 전체를 받음
+  props: ["timelineData", "lineColor"],
   computed: {
-    // 상행/하행 이름을 동적으로 결정
     directionNames() {
       const up = this.timelineData[0]?.direction || "상행";
       const down = this.timelineData[1]?.direction || "하행";
       return { up, down };
     },
-    // 시간대별로 상/하행 데이터를 매칭하여 하나의 리스트로 변환
     mergedTimeline() {
       if (!this.timelineData || this.timelineData.length < 1) return [];
 
@@ -91,7 +89,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: white; /* 기본 배경 흰색 */
+  background-color: white;
 }
 
 .table-container {
@@ -101,10 +99,10 @@ export default {
 
 .congestion-table {
   width: 100%;
-  border-collapse: collapse; /* 경계선 일치를 위해 collapse 권장 */
+  border-collapse: collapse;
 }
 
-/* 1. 헤더 섹션: 노선 색상으로 통일 */
+/* 헤더 섹션 */
 .congestion-table thead th {
   color: white;
   padding: 15px 10px;
@@ -112,26 +110,25 @@ export default {
   top: 0;
   z-index: 10;
   font-size: 14px;
-  border: none; /* 헤더 사이의 경계선 제거 */
+  border: none;
 }
 
-/* 2. 컬럼별 너비 및 배경색 설정 */
 .col-side {
   width: 40%;
   text-align: center;
-  background-color: #ffffff; /* 상/하행 배경 흰색 */
+  background-color: #ffffff;
 }
 
 .col-time {
   width: 20%;
   text-align: center;
   font-weight: bold;
-  background-color: #f7f8f9; /* 시간표 배경만 아주 옅은 회색 */
+  background-color: #f7f8f9;
 }
 
 .congestion-table td {
   padding: 12px 5px;
-  border-bottom: 1px solid #f0f0f0; /* 행 간 구분선 */
+  border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
 }
 
@@ -145,7 +142,6 @@ export default {
   font-size: 14px;
 }
 
-/* 스크롤바 디자인 (세련되게) */
 .table-container::-webkit-scrollbar {
   width: 6px;
 }
