@@ -26,6 +26,7 @@
 import requests
 import os
 import pandas as pd
+import traceback
 
 from dotenv import load_dotenv
 from .line_info_service import getStationLineInfo
@@ -47,58 +48,76 @@ async def getRealtimePosition(subway_nm):
 
         url = f"http://swopenAPI.seoul.go.kr/api/subway/{params['KEY']}/{params['TYPE']}/{params['SERVICE']}/{params['START_INDEX']}/{params['END_INDEX']}/{params['subwayNm']}"
     
-        response = await requests.get(url, params=params)
+        response = requests.get(url, params=params)
         items = response.json()
 
         if items.get("errorMessage", {}).get("code") != "INFO-000":
-            print(items["errorMessage"]["code"])
-            return {}
+            return {"trains": []}
         
-        stationOrderList = await getStationLineInfo(subway_nm)
-        rawList = items.get("realtimePositionList", [])
+        print("items : ", items)
+        
+        # 1. 역 정보 마스터 데이터 가져오기
+        stationResponse = await getStationLineInfo(subway_nm)
+        
+        # 반환된 결과가 딕셔너리이므로 내부의 리스트를 추출해야 함
+        stationOrderList = stationResponse.get("stationList", [])
 
+        rawList = items.get("realtimePositionList", [])
         resList = []
         
         for item in rawList:
-            currentStatnId = item.get("statnId")
-            updnLine = item.get("updnLine") # 0:상행, 1:하행
-            trainSttus = item.get("trainSttus") # 0:진입, 1:도착, 2:출발
+            currentStatnNm = item.get("statnNm")
+            updnLine = item.get("updnLine") 
+            trainSttus = item.get("trainSttus") 
             
-            # 2. 현재 역의 순서(Order) 찾기
-            currentOrder = next((s['order'] for s in stationOrderList if s['statnId'] == currentStatnId), None)
+            # 1. 현재 역의 정보 찾기
+            currentStation = next((s for s in stationOrderList if s['statnNm'] == currentStatnNm), None)
             
-            if currentOrder is None: continue
+            # currentStation이 없거나 'order' 키가 없는 경우 안전하게 스킵
+            if currentStation is None or currentStation.get('order') is None:
+                continue
+            
+            currentOrder = currentStation['order']
 
-            # 3. 다음 역(Next Station) 추정 로직
-            # 상행(0)이면 Order 감소, 하행(1)이면 Order 증가 (데이터 구조에 따라 다름)
-            nextOrder = currentOrder - 1 if updnLine == "0" else currentOrder + 1
-            nextStatn = next((s for s in stationOrderList if s['order'] == nextOrder), None)
-            nextStatnNm = nextStatn['statnNm'] if nextStatn else "종점"
+            # 2. 다음 역(Next Station) 추정 로직
+            # 상행(0)이면 감소, 하행(1)이면 증가
+            try:
+                nextOrder = currentOrder - 1 if int(updnLine) == 0 else currentOrder + 1
+                nextStation = next((s for s in stationOrderList if s.get('order') == nextOrder), None)
+                nextStatnNm = nextStation['statnNm'] if nextStation else "종점"
+            except (TypeError, ValueError):
+                nextStatnNm = "정보 없음"
 
-            # 4. 구간 텍스트 생성 (예: 서울역 -> 시청역 사이)
-            sectionNm = ""
-            if trainSttus in ["0", "1"]: # 진입 또는 도착
-                sectionNm = f"{item.get('statnNm')} 대기 중"
-            else: # 출발 또는 전역출발
-                sectionNm = f"{item.get('statnNm')} ➔ {nextStatnNm} 이동 중"
+            # 3. 상태 텍스트 가공
+            status_list = ["진입", "도착", "출발", "전역출발"]
+            # trainSttus가 문자열이므로 인덱스로 쓸 때 int 변환 필요
+            curr_status = status_list[int(trainSttus)] if int(trainSttus) < len(status_list) else "운행중"
+
+            # 4. 구간 정보 생성
+            if curr_status in ["진입", "도착"]:
+                sectionNm = f"{currentStatnNm} 대기 중"
+            else:
+                sectionNm = f"{currentStatnNm} ➔ {nextStatnNm} 이동 중"
 
             resList.append({
                 "trainNo": item.get("trainNo"),
-                "updnLine": "상행/내선" if updnLine == "0" else "하행/외선",
-                "currentStatnNm": item.get("statnNm"), # 
-                "nextStatnNm": nextStatnNm, # 이 둘 사이의 좌표를 계산해줌
+                "updnLine": "상행/상선/내선" if updnLine == "0" else "하행/하선/외선",
+                "currentStatnNm": currentStatnNm,
+                "nextStatnNm": nextStatnNm,
                 "sectionNm": sectionNm,
-                "status": ["진입", "도착", "출발", "전역출발"][int(trainSttus)],
-                "isExpress": item.get("directAt") != "0"
+                "status": curr_status,
+                "isExpress": item.get("directAt") == "1"
             })
+
+        print("positions : ", resList)
 
         return {
             "subwayNm": subway_nm,
-            "totalCount": len(resList), # 현재 운행 중인 열차 수
+            "totalCount": len(resList),
             "trains": resList
         }
-    except Exception:
-        print("Error!")
 
-
-
+    except Exception as e:
+        print("!!! positions Error 상세 보고 !!!")
+        traceback.print_exc() 
+        return {"errorMessage": "INTERNAL_SERVER_ERROR", "detail": str(e)}

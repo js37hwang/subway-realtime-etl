@@ -69,7 +69,6 @@ def initCongestionTableFromCsv(csvPath):
             # 4. CSV 데이터 로드 및 전처리
             print(f"🚀 {fileName} 데이터를 DB에 적재하기 시작합니다...")
             df = pd.read_csv(csvPath, encoding='ms949')
-            print('shape : ',df.shape)
             
             # CSV 컬럼명과 DB 컬럼명 매칭 (한글 -> 영문)
             # CSV 헤더가 '요일구분,호선...' 순서라고 가정
@@ -102,11 +101,10 @@ def getCongestionData(subway_nm, statn_nm, day_type):
 
     try:
         with connection.cursor() as cursor:
-                    sql = "SELECT * FROM subway_congestion WHERE station_nm = %s AND line_nm = %s AND day_type = %s"
-                    cursor.execute(sql, (statn_nm, subway_nm, day_type ))
+                    sql = "SELECT * FROM subway_congestion WHERE TRIM(station_nm) LIKE %s AND TRIM(line_nm) = %s AND TRIM(day_type) = %s"
+                    cursor.execute(sql, (f"%{statn_nm}%", subway_nm, day_type ))
                     result = cursor.fetchall() # 해당하는 모든 데이터 내놔
 
-                    print(f'result : {result}')
                     return result
     
 
@@ -159,20 +157,6 @@ def initSubwayMaster():
         connection.close()
 
 
-
-def getLineColor(subwayId):
-    """ 호선 ID로 색상 코드 가져오기 """
-    connection = getDbConnection()
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT line_color FROM subway_master WHERE subway_id = %s"
-            cursor.execute(sql, (subwayId,))
-            result = cursor.fetchone()
-            return result['line_color'] if result else "#808080"
-    finally:
-        connection.close()
-
-
 async def getSubwayMasterList():
     """ 
     지하철 마스터 테이블의 모든 정보(ID, 이름, 색상)를 가져옴
@@ -183,10 +167,12 @@ async def getSubwayMasterList():
     connection = getDbConnection()
     try:
         with connection.cursor() as cursor:
-            # 모든 노선의 ID, 이름, 색상을 조회
             sql = "SELECT subway_id, subway_nm, line_color FROM subway_master"
             cursor.execute(sql)
-            return cursor.fetchall() # 리스트 형태로 반환 (DictCursor 설정 덕분에 딕셔너리 리스트가 됨)
+            
+            result = cursor.fetchall() 
+            
+            return result
     except Exception as e:
         print(f"❌ 마스터 데이터 조회 오류: {e}")
         return []

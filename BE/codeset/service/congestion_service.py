@@ -37,9 +37,9 @@ def getCongestionStatus(value):
     """
     val = float(value)
     if val <= 34:
-        return {"status": "여유", "level": "low", "color": "#2ECC71"}
+        return {"status": "여유", "level": "low", "color": "#3498DB"}
     elif val <= 79:
-        return {"status": "보통", "level": "normal", "color": "#3498DB"}
+        return {"status": "보통", "level": "normal", "color": "#2ECC71"}
     elif val <= 124:
         return {"status": "주의", "level": "caution", "color": "#F1C40F"}
     elif val <= 149:
@@ -52,16 +52,50 @@ def getCongestionStatus(value):
 
 def getStationCongestion(subway_nm, statn_nm, day_type):
     """
-    API의 시간대별 컬럼들을 리스트 형태의 응답 데이터로 변환
+    DB -> 프론트용으로 가공
     """
-    resList = []
+    dbCongData = getCongestionData(subway_nm, statn_nm, day_type)
+    
+    if not dbCongData:
+        return {"subwayNm": subway_nm, "stationNm": statn_nm, "congestions": []}
 
-    # 상행/하행 내행/외행의 2개 데이터 출력
-    resList = getCongestionData(subway_nm, statn_nm, day_type)
+    final_res = []
 
-    print(resList)
+    for row in dbCongData:
+        # 1. 컬럼명 매핑: DB 데이터는 'direction' 컬럼을 사용함
+        direction = row.get("direction") 
+        timeline = []
 
+        # 2. t0530부터 t0030까지 30분 단위 컬럼 순회
+        for hour in range(0, 25): # 00시부터 24시까지
+            for minute in ["00", "30"]:
+                # DB 컬럼 규칙: 't' + 'HHMM' (예: t0530, t1800)
+                time_key = f"t{str(hour).zfill(2)}{minute}"
+                
+                # 해당 시간 데이터가 row에 존재하는지 확인
+                congestion_val = row.get(time_key)
 
-    #  "time": f"{data[:2]}:{data[2:]}", # "0830" -> "08:30"
+                if congestion_val is not None:
+                    # 혼잡도 등급 및 색상 정보 가져오기
+                    status_info = getCongestionStatus(congestion_val)
+                    
+                    timeline.append({
+                        # "t0830" -> "08:30"
+                        "time": f"{time_key[1:3]}:{time_key[3:]}", 
+                        "value": float(congestion_val),
+                        "status": status_info["status"],
+                        "level": status_info["level"],
+                        "color": status_info["color"]
+                    })
 
-    return 
+        final_res.append({
+            "direction": direction,
+            "timeline": timeline
+        })
+
+    return {
+        "subwayNm": subway_nm,
+        "stationNm": statn_nm,
+        "dayType": day_type,
+        "congestions": final_res
+    }
