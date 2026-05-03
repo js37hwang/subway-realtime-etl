@@ -5,13 +5,13 @@
     </div>
 
     <div class="timeline-container">
-      <!-- 1. 좌우를 잇는 노선도색 굵은 선 -->
+      <!-- [배경] 노선 라인  -->
       <div
         class="main-horizontal-line"
         :style="{ backgroundColor: lineColor }"
       ></div>
 
-      <!-- 2. 다가오는 열차 (왼쪽) -->
+      <!-- [좌측] 접근중인 열차 -->
       <div class="timeline-wing upcoming">
         <div
           v-if="arrivals.upcoming && arrivals.upcoming.length > 0"
@@ -26,7 +26,7 @@
         <div v-else class="no-data">운행 예정 열차 없음</div>
       </div>
 
-      <!-- 3. 중앙 역 지점 (화살표 포함) -->
+      <!-- [중앙] 현재 역 -->
       <div class="timeline-center">
         <div class="center-node" :style="{ borderColor: lineColor }">
           <!-- 진행 방향 화살표 (오른쪽으로 흐르는 느낌) -->
@@ -35,7 +35,7 @@
         <span class="node-label">{{ selectedStation }}</span>
       </div>
 
-      <!-- 4. 방금 떠난 열차 (오른쪽) -->
+      <!-- [우측] 떠나간 열차 -->
       <div class="timeline-wing left">
         <div
           v-if="arrivals.recentlyLeft && arrivals.recentlyLeft.length > 0"
@@ -49,7 +49,7 @@
             arrivals.recentlyLeft[0].trainLineNm
           }}</span>
         </div>
-        <div v-else class="no-data-text">최근 출발 정보 없음</div>
+        <div v-else class="train-badge departed">최근 출발 정보 없음</div>
       </div>
     </div>
 
@@ -60,8 +60,17 @@
         :key="index"
         class="mini-item"
       >
-        <span class="mini-dir">{{ arr.trainLineNm }}</span>
-        <span class="mini-time">{{ arr.arrivalText }}</span>
+        <div
+          class="mini-dot"
+          :class="getDotClass(arr.arrivalTime, arr?.arrivalText)"
+        ></div>
+        <span
+          class="mini-time"
+          :class="getArrivalStatus(arr.arrivalTime, arr?.arrivalText)"
+        >
+          {{ formatArrivalTime(arr.arrivalTime, arr?.arrivalText) }}
+        </span>
+        <span class="mini-dir">{{ formatDirection(arr.trainLineNm) }}</span>
       </div>
     </div>
   </section>
@@ -70,6 +79,33 @@
 <script>
 export default {
   props: ["arrivals", "selectedStation", "lineColor"],
+  methods: {
+    getArrivalStatus(arrivalTime, arrivalText) {
+      if (arrivalTime === 0 && arrivalText.includes("번째")) return "far";
+      if (arrivalTime === 0) return "urgent";
+      if (arrivalTime <= 180) return "soon";
+      return "normal";
+    },
+
+    formatArrivalTime(arrivalTime, arrivalText) {
+      if (arrivalTime === 0) return arrivalText;
+      const min = Math.floor(arrivalTime / 60);
+      const sec = arrivalTime % 60;
+      return sec === 0 ? `${min}분 후` : `${min}분 ${sec}초`;
+    },
+
+    // 노선
+    formatDirection(trainLineNm) {
+      return trainLineNm ? trainLineNm.replace(/\[|\]/g, "") : "";
+    },
+
+    // css
+    getDotClass(arrivalTime, arrivalText) {
+      const status = this.getArrivalStatus(arrivalTime, arrivalText);
+      // status가 'far'면 그대로 'far', 그 외엔 'dot-' 접두사 붙임
+      return status === "far" ? "far" : `dot-${status}`;
+    },
+  },
 };
 </script>
 
@@ -81,7 +117,7 @@ export default {
   padding: 30px;
   background: #fff;
   border-radius: 12px;
-  min-height: 300px;
+  min-height: 400px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -104,10 +140,10 @@ export default {
   position: absolute;
   left: 10%;
   right: 10%;
-  height: 8px; /* 굵직한 노선 느낌 */
+  height: 8px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1; /* 뱃지보다 뒤에 위치 */
+  z-index: 1;
   border-radius: 4px;
   opacity: 0.9;
 }
@@ -149,7 +185,7 @@ export default {
 .node-label {
   margin-top: 12px;
   font-weight: 800;
-  font-size: 16px;
+  font-size: 22px;
   color: #333;
 }
 
@@ -200,21 +236,52 @@ export default {
   border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-around;
+  gap: 20px;
 }
 
 .mini-item {
+  flex: 1;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-}
-.mini-dir {
-  font-size: 12px;
-  color: #999;
+  border: 0.5px solid #eee;
 }
 .mini-time {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+.mini-dir {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  line-height: 1.4;
+}
+.urgent {
+  color: #e24b4a;
+}
+.soon {
+  color: #ba7517;
+}
+.normal {
+  color: #185fa5;
+}
+.mini-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-bottom: 2px;
+}
+.dot-urgent {
+  background: #e24b4a;
+}
+.dot-soon {
+  background: #ba7517;
+}
+.dot-normal {
+  background: #185fa5;
 }
 </style>
