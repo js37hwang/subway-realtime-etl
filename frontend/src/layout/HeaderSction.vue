@@ -11,28 +11,29 @@
       >
         <option
           v-for="line in lineList"
-          :value="line.subway_nm"
           :key="line.subway_id"
+          :value="line.subway_nm"
         >
           {{ line.subway_nm }}
         </option>
       </select>
       <input
-        type="text"
-        :value="selectedStation"
-        @input="$emit('update:station', $event.target.value)"
-        @keyup.enter="$emit('search')"
-        placeholder="역 이름 입력"
         class="station-input"
+        type="text"
+        placeholder="역 이름 입력"
+        :value="stationName"
+        @input="stationName = $event.target.value"
+        @keyup.enter="handleSearch"
       />
       <button
         class="search-btn"
         :style="{ backgroundColor: lineColor }"
-        @click="$emit('search')"
+        @click="handleSearch"
       >
         검색
       </button>
     </div>
+
     <div class="refresh-timer">
       <span class="timer-text">
         <strong>{{ secondsSinceUpdate }}초 전</strong>
@@ -52,6 +53,30 @@ export default {
     "lineColor",
     "secondsSinceUpdate",
   ],
+  data() {
+    return {
+      stationName: "",
+    };
+  },
+  watch: {
+    selectedStation(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.stationName = newVal;
+      }
+    },
+  },
+  mounted() {
+    this.stationName = this.selectedStation;
+  },
+  methods: {
+    handleSearch() {
+      if (!this.stationName.trim()) {
+        alert("역 이름을 입력해주세요.");
+        return;
+      }
+      this.$emit("search", this.stationName.trim());
+    },
+  },
 };
 </script>
 
