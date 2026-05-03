@@ -32,7 +32,6 @@
 
 import requests
 import os
-import pandas as pd
 import traceback
 
 from datetime import datetime

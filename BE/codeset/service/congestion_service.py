@@ -23,8 +23,6 @@
 - 매우 혼잡      : 150% 이상   (열차 탑승 곤란)
 """
 
-import pandas as pd
-
 from dotenv import load_dotenv
 from .database import getCongestionData
 
@@ -62,7 +60,7 @@ def getStationCongestion(subway_nm, statn_nm, day_type):
     final_res = []
 
     for row in dbCongData:
-        # 1. 컬럼명 매핑: DB 데이터는 'direction' 컬럼을 사용함
+        # 1. 컬럼명 매핑: DB- direction=
         direction = row.get("direction") 
         timeline = []
 
@@ -72,7 +70,7 @@ def getStationCongestion(subway_nm, statn_nm, day_type):
                 # DB 컬럼 규칙: 't' + 'HHMM' (예: t0530, t1800)
                 time_key = f"t{str(hour).zfill(2)}{minute}"
                 
-                # 해당 시간 데이터가 row에 존재하는지 확인
+                # 해당 시간 데이터가 row에 존재하는지 
                 congestion_val = row.get(time_key)
 
                 if congestion_val is not None:

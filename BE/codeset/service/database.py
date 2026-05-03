@@ -2,10 +2,8 @@ import pymysql
 import os
 import pandas as pd
 
-from datetime import datetime
 from dotenv import load_dotenv
 
-# 스크린샷 2026-05-01 12:08:37.png 구조에 맞춘 env 경로 로드
 load_dotenv(dotenv_path=".env")
 
 def getDbConnection():
@@ -24,7 +22,7 @@ def initCongestionTableFromCsv(csvPath):
     CSV 파일명(예: subway_congestion_20260501.csv)에서 날짜를 추출하여
     DB에 해당 날짜 데이터가 없는 경우에만 적재합니다.
     """
-    # 1. 파일명에서 날짜 추출 (파일명 형식: *_YYYYMMDD.csv 가정)
+    # 1. 파일명- 날짜 추출 (*_*_YYYYMMDD.csv)
     fileName = os.path.basename(csvPath)
     try:
         fileDateStr = fileName.split('_')[-1].split('.')[0] # "20260501"
@@ -59,7 +57,7 @@ def initCongestionTableFromCsv(csvPath):
             """
             cursor.execute(createTableSql)
 
-            # 3. 데이터 중복 확인 (해당 날짜 데이터가 이미 있는지)
+            # 3. 데이터 중복 확인
             checkSql = "SELECT COUNT(*) as count FROM subway_congestion WHERE data_date = %s"
             cursor.execute(checkSql, (fileDateStr,))
             if cursor.fetchone()['count'] > 0:
@@ -70,8 +68,7 @@ def initCongestionTableFromCsv(csvPath):
             print(f"🚀 {fileName} 데이터를 DB에 적재하기 시작합니다...")
             df = pd.read_csv(csvPath, encoding='ms949')
             
-            # CSV 컬럼명과 DB 컬럼명 매칭 (한글 -> 영문)
-            # CSV 헤더가 '요일구분,호선...' 순서라고 가정
+            # CSV 컬럼명- DB 컬럼명 (한글 -> 영문)
             df.columns = [
                 'day_type', 'line_nm', 'station_cd', 'station_nm', 'direction',
                 't0530', 't0600', 't0630', 't0700', 't0730', 't0800', 't0830', 't0900', 't0930',
@@ -80,9 +77,9 @@ def initCongestionTableFromCsv(csvPath):
                 't1900', 't1930', 't2000', 't2030', 't2100', 't2130', 't2200', 't2230', 't2300',
                 't2330', 't0000', 't0030'
             ]
-            df['data_date'] = fileDateStr # 파일명에서 가져온 날짜 추가
+            df['data_date'] = fileDateStr # 파일명에서 추출한 날짜 추가
 
-            # 5. DB에 Bulk Insert
+            # 5. DB Insert
             insertSql = f"""
             INSERT INTO subway_congestion ({", ".join(df.columns)})
             VALUES ({", ".join(["%s"] * len(df.columns))})

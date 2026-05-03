@@ -25,7 +25,6 @@
 
 import requests
 import os
-import pandas as pd
 import traceback
 
 from dotenv import load_dotenv
@@ -56,10 +55,10 @@ async def getRealtimePosition(subway_nm):
         
         print("items : ", items)
         
-        # 1. 역 정보 마스터 데이터 가져오기
+        # 1. 노선도 정보 가져오기- subway_master
         stationResponse = await getStationLineInfo(subway_nm)
         
-        # 반환된 결과가 딕셔너리이므로 내부의 리스트를 추출해야 함
+        # 딕셔너리- 내부의 리스트 추출
         stationOrderList = stationResponse.get("stationList", [])
 
         rawList = items.get("realtimePositionList", [])
@@ -73,7 +72,7 @@ async def getRealtimePosition(subway_nm):
             # 1. 현재 역의 정보 찾기
             currentStation = next((s for s in stationOrderList if s['statnNm'] == currentStatnNm), None)
             
-            # currentStation이 없거나 'order' 키가 없는 경우 안전하게 스킵
+            # currentStation이 없거나 'order' 키가 없는 경우 스킵
             if currentStation is None or currentStation.get('order') is None:
                 continue
             
@@ -90,7 +89,7 @@ async def getRealtimePosition(subway_nm):
 
             # 3. 상태 텍스트 가공
             status_list = ["진입", "도착", "출발", "전역출발"]
-            # trainSttus가 문자열이므로 인덱스로 쓸 때 int 변환 필요
+
             curr_status = status_list[int(trainSttus)] if int(trainSttus) < len(status_list) else "운행중"
 
             # 4. 구간 정보 생성
@@ -101,12 +100,12 @@ async def getRealtimePosition(subway_nm):
 
             resList.append({
                 "trainNo": item.get("trainNo"),
-                "updnLine": "상행/상선/내선" if updnLine == "0" else "하행/하선/외선",
+                "updnLine": "상행/상선/내선" if int(updnLine) == 0 else "하행/하선/외선",
                 "currentStatnNm": currentStatnNm,
                 "nextStatnNm": nextStatnNm,
                 "sectionNm": sectionNm,
                 "status": curr_status,
-                "isExpress": item.get("directAt") == "1"
+                "isExpress": int(item.get("directAt")) == 1
             })
 
         print("positions : ", resList)

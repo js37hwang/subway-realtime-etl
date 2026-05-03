@@ -13,10 +13,8 @@
 
 import requests
 import os
-import pandas as pd
 import traceback
 
-from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path="../../dataset/config/.env")
@@ -28,7 +26,7 @@ def sortStationList(stationList):
     
     sortedList = sorted(stationList, key=lambda x: x.get("FR_CODE", ""))
 
-    # 3. 정렬된 순서대로 order(1부터 시작) 부여
+    # 3. 정렬된 순서대로 order 부여(1부터 시작) 
     for idx, station in enumerate(sortedList):
         station['order'] = idx + 1
 
@@ -79,11 +77,9 @@ async def getStationLineInfo(subway_nm):
 
     except Exception as e:
         print("!!! lineStations Error 상세 보고 !!!")
-        # 1. 에러의 종류와 기본 메시지 출력
         print(f"Error Type: {type(e).__name__}")
         print(f"Error Message: {e}")
         
-        # 2. 에러가 발생한 정확한 위치(파일, 라인 등) 출력
         print("\n--- Traceback ---")
         traceback.print_exc() 
         

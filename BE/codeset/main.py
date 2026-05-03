@@ -16,9 +16,9 @@ from service.database import initCongestionTableFromCsv, getSubwayMasterList
 # 환경 변수 로드
 load_dotenv(dotenv_path="../dataset/config/.env")
 
+# 서버 시작 시 실행- vue created 같은 부분
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # [STARTUP] 서버 시작 시 실행
     print("🚀 ETL 서버 시작 및 초기 데이터 적재 중...")
     csv_file_path = "../dataset/서울교통공사_지하철혼잡도정보_20251130.csv"
     
